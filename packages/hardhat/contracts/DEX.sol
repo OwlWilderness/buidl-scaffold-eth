@@ -14,6 +14,8 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
  */
 contract DEX {
     /* ========== GLOBAL VARIABLES ========== */
+    uint256 totalLiquidity;
+    mapping (address => uint256) public liquidity;
 
     using SafeMath for uint256; //outlines use of SafeMath for uint256 variables
     IERC20 token; //instantiates the imported contract
@@ -54,7 +56,22 @@ contract DEX {
      * @return totalLiquidity is the number of LPTs minting as a result of deposits made to DEX contract
      * NOTE: since ratio is 1:1, this is fine to initialize the totalLiquidity (wrt to balloons) as equal to eth balance of contract.
      */
-    function init(uint256 tokens) public payable returns (uint256) {}
+    function init(uint256 tokens) public payable returns (uint256) {
+        /**
+        * viewed solution: yes - below was my code pre view
+        * (bool success, ) = address(this).call{value: msg.value}("");
+        * liquidity[msg.sender] = tokens;
+        * totalLiquidity = address(this).balance;
+        * return totalLiquidity;
+        *
+        **/
+        require(totalLiquidity == 0, 'dex already initalized');
+        totalLiquidity = address(this).balance;
+        liquidity[msg.sender] = totalLiquidity;
+        bool success = token.transferFrom(msg.sender, address(this), tokens);
+        require(success, 'dex failed to initialize');
+        return totalLiquidity;
+    }
 
     /**
      * @notice returns yOutput, or yDelta for xInput (or xDelta)
