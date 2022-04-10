@@ -26,22 +26,22 @@ contract DEX {
     /**
      * @notice Emitted when ethToToken() swap transacted
      */
-    event EthToTokenSwap();
+    event EthToTokenSwap(address, string, uint256, uint256);
 
     /**
      * @notice Emitted when tokenToEth() swap transacted
      */
-    event TokenToEthSwap();
+    event TokenToEthSwap(address, string, uint256, uint256);
 
     /**
      * @notice Emitted when liquidity provided to DEX and mints LPTs.
      */
-    event LiquidityProvided();
+    event LiquidityProvided(address, uint256, uint256, uint256);
 
     /**
      * @notice Emitted when liquidity removed from DEX and decreases LPT count within DEX.
      */
-    event LiquidityRemoved();
+    event LiquidityRemoved(address, uint256, uint256, uint256);
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -109,6 +109,9 @@ contract DEX {
 
     /**
      * @notice sends Ether to DEX in exchange for $BAL
+     * calculate the resulting amount of output asset using our price function 
+     * that looks at the ratio of the reserves vs the input asset
+     * ethToToken with some ETH in the transaction and it will send us $BAL tokens.      
      */
     function ethToToken() public payable returns (uint256 tokenOutput) {
        //my solution:
@@ -125,12 +128,15 @@ contract DEX {
         
         tokenOutput = price(xInput, xReserves, yReserves);
         require(token.transfer(msg.sender, tokenOutput),"could not complete swap"); 
-        emit EthToTokenSwap() ;
+        emit EthToTokenSwap(msg.sender, "Eth to Balloons", msg.value, tokenOutput);
         return tokenOutput;
     }
 
     /**
      * @notice sends $BAL tokens to DEX in exchange for Ether
+     * calculate the resulting amount of output asset using our price function 
+     * that looks at the ratio of the reserves vs the input asset
+     * We can call tokenToEth and it will take our tokens and send us ETH
      */
     function tokenToEth(uint256 tokenInput) public returns (uint256 ethOutput) {
         //uint256 xInput = tokenInput;
@@ -143,27 +149,84 @@ contract DEX {
         uint256 xInput = tokenInput;
         uint256 xReserves = token.balanceOf(address(this)); //.sub(tokenInput); why isnt it subtracted here?
         uint256 yReserves = address(this).balance;
-        require(token.transfer(msg.sender, address(this), xInput), 'could not transfer tokens');
+        require(token.transfer(address(this), xInput), 'could not transfer tokens');
 
         ethOutput = price(xInput, xReserves, yReserves);
         (bool ok, ) = msg.sender.call{value: ethOutput}("");
-        requre(ok, 'could not transfer ether');
-        emit TokenToEthSwap();
+        require(ok, 'could not transfer ether');
+        emit TokenToEthSwap(msg.sender, "Balloons to ETH", ethOutput, tokenInput);
         return ethOutput;
-
     }
 
     /**
      * @notice allows deposits of $BAL and $ETH to liquidity pool
-     * NOTE: parameter is the msg.value sent with this function call. That amount is used to determine the amount of $BAL needed as well and taken from the depositor.
-     * NOTE: user has to make sure to give DEX approval to spend their tokens on their behalf by calling approve function prior to this function call.
+     * NOTE: parameter is the msg.value sent with this function call.
+     *       That amount is used to determine the amount of $BAL needed as well and taken from the depositor.
+     * NOTE: user has to make sure to give DEX approval to spend their tokens on their behalf 
+     *       by calling approve function prior to this function call.
      * NOTE: Equal parts of both assets will be removed from the user's wallet with respect to the price outlined by the AMM.
      */
-    function deposit() public payable returns (uint256 tokensDeposited) {}
+    function deposit() public payable returns (uint256 tokensDeposited) {
+        /* The deposit() function receives ETH 
+         * and also transfers $BAL tokens from the caller to the contract 
+         *          at the right ratio.
+         * The contract also tracks the amount of liquidity 
+         *   (how many liquidity provider tokens (LPTs) minted) 
+         *    the depositing address owns vs the totalLiquidity.
+        */
+        //my solution befor looking::
+        //require(msg.value > 0, 'please submit some eth');
+        // //track liquidity
+        //liquidity[msg.sender] = msg.value;
+        // //receive correct amount of eth 
+        // tokensDeposited = ethToToken();
+        // //transfer $BAL tokens
+         //require(token.transfer(address(this), tokensDeposited), 'unable to transfer tokens to contract');
+
+        //afer looking:
+        uint256 ethReserve = address(this).balance.sub(msg.value); 
+        uint256 tokenReserve = token.balanceOf(address(this));
+        uint256 tokenDeposit;
+
+        tokenDeposit = (msg.value.mul(tokenReserve) / ethReserve).add(1);
+        uint256 liquidityMinted = msg.value.mul(totalLiquidity) / ethReserve;
+        liquidity[msg.sender] = liquidity[msg.sender].add(liquidityMinted);
+        totalLiquidity = totalLiquidity.add(liquidityMinted);
+
+        require(token.transferFrom(msg.sender, address(this), tokenDeposit));
+        emit LiquidityProvided(msg.sender, liquidityMinted, msg.value, tokenDeposit);
+        return tokenDeposit;        
+    }
 
     /**
      * @notice allows withdrawal of $BAL and $ETH from liquidity pool
-     * NOTE: with this current code, the msg caller could end up getting very little back if the liquidity is super low in the pool. I guess they could see that with the UI.
+     * NOTE: with this current code, the msg caller could end up getting very little back if the liquidity is super low in the pool. 
+     * I guess they could see that with the UI.
+     *
+     * withdraw() function lets a user take both ETH and $BAL tokens out at the correct ratio. 
+     * The actual amount of ETH and tokens a liquidity provider withdraws could be higher 
+     * than what they deposited because of the 0.3% fees collected from each trade. 
+     * It also could be lower depending on the price fluctuations of $wBAL to ETH and vice versa 
+     * (from token swaps taking place using your AMM!). 
+     * The 0.3% fee incentivizes third parties to provide liquidity, but they must be cautious of Impermanent Loss (IL).     
      */
-    function withdraw(uint256 amount) public returns (uint256 eth_amount, uint256 token_amount) {}
+    function withdraw(uint256 amount) public returns (uint256 eth_amount, uint256 token_amount) {
+        
+        uint256 tokenReserve = token.balanceOf(address(this));
+        uint256 ethReserve = address(this).balance;
+     
+        //take eth out at correct ratio
+        //from solution:
+        uint256 ethWithdrawn;
+        ethWithdrawn = amount.mul(ethReserve) / totalLiquidity;
+        uint256 tokenAmount = amount.mul(tokenReserve) / totalLiquidity;
+        liquidity[msg.sender] = liquidity[msg.sender].sub(amount);
+        totalLiquidity = totalLiquidity.sub(amount);
+
+        (bool sent, ) = payable(msg.sender).call{ value: ethWithdrawn }("");
+        require(sent, "withdraw(): revert in transferring eth to you!");
+        require(token.transfer(msg.sender, tokenAmount));
+        emit LiquidityRemoved(msg.sender, amount, ethWithdrawn, tokenAmount);
+        return (ethWithdrawn, tokenAmount);
+    }
 }

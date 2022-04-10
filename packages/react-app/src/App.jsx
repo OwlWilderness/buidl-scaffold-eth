@@ -59,7 +59,7 @@ const { ethers } = require("ethers");
 */
 
 /// 📡 What chain are your contracts deployed to?
-const initialNetwork = NETWORKS.localhost; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
+const initialNetwork = NETWORKS.rinkeby; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
 
 // 😬 Sorry for all the console logging
 const DEBUG = true;
@@ -258,15 +258,17 @@ function App(props) {
 
   // ** TODO: The events are not showing up! Left most of it commented out, but can uncomment and play with! Pretty sure you need to go into DEX.jsx as that is where most of the UI Home-page is being derived from. 😵 📟 Listen for broadcast events
 
+
   const EthToTokenSwapEvents = useEventListener(readContracts, "DEX", "EthToTokenSwap", localProvider, 1);
   console.log("⟠ -->🎈 EthToTokenSwapEvents:", EthToTokenSwapEvents);
-  // const TokenToEthSwapEvents = useEventListener(readContracts, "DEX", "TokenToEthSwap", 1);
-  // // console.log("🎈-->⟠ TokenToEthSwapEvents:", TokenToEthSwapEvents);
-  // const LiquidityProvidedEvents = useEventListener(readContracts, "DEX", "LiquidityProvided", 1);
-  // // console.log("➕ LiquidityProvidedEvents:", LiquidityProvidedEvents);
-  // const LiquidityRemovedEvents = useEventListener(readContracts, "DEX", "LiquidityRemoved", 1);
-  // // console.log("➖ LiquidityRemovedEvents:", LiquidityRemovedEvents);
-
+   const TokenToEthSwapEvents = useEventListener(readContracts, "DEX", "TokenToEthSwap", localProvider, 1);
+   console.log("🎈-->⟠ TokenToEthSwapEvents:", TokenToEthSwapEvents);
+   const LiquidityProvidedEvents = useEventListener(readContracts, "DEX", "LiquidityProvided", localProvider, 1);
+   console.log("➕ LiquidityProvidedEvents:", LiquidityProvidedEvents);
+   const LiquidityRemovedEvents = useEventListener(readContracts, "DEX", "LiquidityRemoved", localProvider,1);
+   console.log("➖ LiquidityRemovedEvents:", LiquidityRemovedEvents);
+   //const ApprovalEvents = useEventListener(readContracts, "DEX", "Approval", localProvider, 1);
+   //console.log("⟠ -->🎈 ApprovalEvents:", ApprovalEvents);
   return (
     <div className="App">
       {/* ✏️ Edit the header and change the title to your project name */}
@@ -375,8 +377,16 @@ function App(props) {
             mainnetProvider={mainnetProvider}
             startBlock={1}
           />
+          {/*<Events
+            contracts={readContracts}
+            contractName="DEX"
+            eventName="Approval"
+            localProvider={localProvider}
+            mainnetProvider={mainnetProvider}
+            startBlock={1}
+          />*/}
         </Route>
-        }
+        
         <Route exact path="/debug">
           {/*
                 🎛 this scaffolding is full of commonly used components

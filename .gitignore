@@ -67,3 +67,5 @@ yarn-error.log*
 
 # doc directory
 /doc
+packages/react-app/src/constants.js
+packages/hardhat/package.json
