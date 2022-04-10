@@ -1,10 +1,12 @@
 # 🏗 scaffold-eth | 🏰 BuidlGuidl
 
 ## Challenge 3 Notes:
-links to verified Contracts:
+
+Verified Contracts:
 * Ballons: https://rinkeby.etherscan.io/address/0xc1EC5382738984c4701C2B1fE08A701c928b8052#code
 * DEX: https://rinkeby.etherscan.io/address/0xf797c587a0e798a3ef30cc152746da938da274d6#code
-* Demo: https://qtekh-c3-dex.surge.sh
+
+Demo: https://qtekh-c3-dex.surge.sh
 
 ## 🚩 **Challenge 3: Single Pool Dex**
 
