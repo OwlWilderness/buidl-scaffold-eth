@@ -153,6 +153,7 @@ function App(props) {
 
   // Load in your local 📝 contract and read a value from it:
   const readContracts = useContractLoader(localProvider, contractConfig);
+
   const liquidity = useContractReader(readContracts, "DEX", "getLiquidity", [address]);
 
   // If you want to make 🔐 write transactions to your contracts, use the userSigner:
@@ -267,8 +268,8 @@ function App(props) {
    console.log("➕ LiquidityProvidedEvents:", LiquidityProvidedEvents);
    const LiquidityRemovedEvents = useEventListener(readContracts, "DEX", "LiquidityRemoved", localProvider,1);
    console.log("➖ LiquidityRemovedEvents:", LiquidityRemovedEvents);
-   //const ApprovalEvents = useEventListener(readContracts, "DEX", "Approval", localProvider, 1);
-   //console.log("⟠ -->🎈 ApprovalEvents:", ApprovalEvents);
+   const ApprovalEvents = useEventListener(readContracts, "Balloons", "Approval", localProvider, 1);
+   console.log("ApprovalEvents:", ApprovalEvents);
   return (
     <div className="App">
       {/* ✏️ Edit the header and change the title to your project name */}
@@ -377,14 +378,14 @@ function App(props) {
             mainnetProvider={mainnetProvider}
             startBlock={1}
           />
-          {/*<Events
+          <Events
             contracts={readContracts}
-            contractName="DEX"
+            contractName="Balloons"
             eventName="Approval"
             localProvider={localProvider}
             mainnetProvider={mainnetProvider}
             startBlock={1}
-          />*/}
+          />
         </Route>
         
         <Route exact path="/debug">

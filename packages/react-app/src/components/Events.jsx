@@ -34,7 +34,9 @@ export default function Events({ contracts, contractName, eventName, localProvid
           ? "🎈-->⟠ Address | Trade | AmountOut | AmountIn"
           : eventName === "LiquidityProvided"
           ? "➕ Address | Liquidity Minted | Eth In | Balloons In"
-          : "➖ Address | Liquidity Withdrawn | ETH out | Balloons Out "}
+          : eventName === "LiquidityRemoved" 
+          ? "➖ Address | Liquidity Withdrawn | ETH out | Balloons Out " 
+          :"Approver | Spender | Approved Amount"}
       </h2>
       <List
         bordered
@@ -49,7 +51,7 @@ export default function Events({ contracts, contractName, eventName, localProvid
                 `${item.args[1].toString()}`
               )}
               <TokenBalance balance={item.args[2]} provider={localProvider} />
-              <TokenBalance balance={item.args[3]} provider={localProvider} />
+              { eventName == "Approval"? "" :<TokenBalance balance={item.args[3]} provider={localProvider} /> }
             </List.Item>
           );
         }}
