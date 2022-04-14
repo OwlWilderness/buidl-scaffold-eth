@@ -8,6 +8,8 @@ Verified Contracts:
 
 Demo: https://qtekh-c3-dex.surge.sh
 
+2022 April 14: Added Approval Events to React app
+
 ## 🚩 **Challenge 3: Single Pool Dex**
 
 This challenge will help you build/understand a simple decentralized exchange, with one token-pair (ERC20 BALLOONS ($BAL) and ETH). This repo is an updated version of the [original tutorial](https://medium.com/@austin_48503/%EF%B8%8F-minimum-viable-exchange-d84f30bd0c90) and challenge repos before it. Please read the intro for a background on what we are building first!
